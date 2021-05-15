@@ -1,42 +1,29 @@
-function getWeatherData(city) {
-  return fetch(
+const searchInput = document.querySelector("#searchInput");
+const searchBtn = document.querySelector("#searchBtn");
+const swapBtn = document.querySelector("#swapBtn");
+
+async function getWeatherData(city) {
+  let response = await fetch(
     `http://api.openweathermap.org/data/2.5/weather?q=${city}&appid=7b175c2aefe32be480ff27b12fc78e51`,
     { mode: "cors" }
-  )
-    .then((response) => {
-      return response.json();
-    })
-    .then((data) => {
-      console.log(data);
-      console.log({
-        temperature: kToC(data.main.temp),
-        weatherDes: data.weather[0].main,
-      });
-      let loading = document.querySelector(".loader");
-      setTimeout(() => {
-        loading.style.visibility = "hidden";
-      }, 1000);
-      return {
-        temperature: kToC(data.main.temp),
-        weatherDes: data.weather[0].main,
-      };
-    })
-    .catch((err) => {
-      console.log("error");
-      alert("Error, didnt find city!");
-      let loading = document.querySelector(".loader");
-      loading.style.visibility = "hidden";
-      return;
-    });
+  );
+  let data = await response.json();
+  let loading = document.querySelector(".loader");
+  setTimeout(() => {
+    loading.style.visibility = "hidden";
+  }, 1000);
+  return {
+    temperature: kToC(data.main.temp),
+    weatherDes: data.weather[0].main,
+  };
 }
 
 // Init Berlin
-let weather = getWeatherData("Berlin").then((data) => {
-  console.log(data);
+getWeatherData("Berlin").then((data) => {
   let info = document.querySelector(".info");
 
   let city = document.createElement("h3");
-  city.textContent = "Berlin";
+  city.textContent = "BERLIN";
   let temp = document.createElement("h3");
   temp.setAttribute("id", "temp");
   temp.textContent = data.temperature + " °C";
@@ -47,30 +34,32 @@ let weather = getWeatherData("Berlin").then((data) => {
   changeBackground(data.weatherDes);
 });
 
-const searchInput = document.querySelector("#searchInput");
-const searchBtn = document.querySelector("#searchBtn");
-const swapBtn = document.querySelector("#swapBtn");
-
 searchBtn.addEventListener("click", () => {
   let loading = document.querySelector(".loader");
   loading.style.visibility = "visible";
   let weather = getWeatherData(`${searchInput.value}`);
-  weather.then((res) => {
-    console.log(res);
-    let info = document.querySelector(".info");
-    info.innerHTML = "";
+  weather
+    .then((res) => {
+      let info = document.querySelector(".info");
+      info.innerHTML = "";
 
-    let city = document.createElement("h3");
-    city.textContent = searchInput.value;
-    let temp = document.createElement("h3");
-    temp.setAttribute("id", "temp");
-    temp.textContent = res.temperature + " °C";
-    let des = document.createElement("h3");
-    des.textContent = res.weatherDes;
+      let city = document.createElement("h3");
+      city.textContent = searchInput.value.toUpperCase();
+      let temp = document.createElement("h3");
+      temp.setAttribute("id", "temp");
+      temp.textContent = res.temperature + " °C";
+      let des = document.createElement("h3");
+      des.textContent = res.weatherDes;
 
-    info.append(city, temp, des);
-    changeBackground(res.weatherDes);
-  });
+      info.append(city, temp, des);
+      changeBackground(res.weatherDes);
+    })
+    .catch((err) => {
+      alert("Error, didnt find city!");
+      let loading = document.querySelector(".loader");
+      loading.style.visibility = "hidden";
+      return;
+    });
 });
 
 swapBtn.addEventListener("click", () => {
@@ -88,7 +77,6 @@ swapBtn.addEventListener("click", () => {
 });
 
 function changeBackground(wetter) {
-  console.log(wetter);
   if (wetter == "Rain") {
     document.body.style.backgroundImage = "url('css/rain.jpg')";
   } else if (wetter == "Clouds") {
